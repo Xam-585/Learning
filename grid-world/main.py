@@ -1,11 +1,6 @@
 
-
-
-
-
 start_position = [1, 2]
 current_position = start_position.copy()
-
 
 
 world = [
@@ -33,10 +28,8 @@ def move_agent(world, current_position, action):
             The input position is modified in place.
     """
 
-
     x_operation = "+"
     y_operation = "+"
-
     moving_position = current_position.copy()
 
     if action[0] < 0:
@@ -44,7 +37,6 @@ def move_agent(world, current_position, action):
 
     if action[1] < 0:
         y_operation = "-"
-
     
     if abs(action[0]) > 0:
         for x in range(abs(action[0])):
@@ -64,11 +56,6 @@ def move_agent(world, current_position, action):
                 return current_position
 
     return current_position
-    
-
-
-
-
 
 
 def is_valid_position(world, x, y):
@@ -83,14 +70,19 @@ def is_valid_position(world, x, y):
     Returns:
         bool: True if the position is valid (within bounds and not an obstacle), False otherwise
     """
+
     position_allowed = False
+
     if 0 <= x < len(world[0]) and 0 <= y < len(world) and world[y][x] != 1:
         position_allowed = True
 
     return position_allowed
 
 
-current_position = move_agent(world, current_position, [1, -1])
 
-print(current_position)
 
+
+
+
+if __name__ == "__main__":
+    current_position = move_agent(world, current_position, [0, -1])
