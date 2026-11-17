@@ -1,3 +1,5 @@
+import heapq
+
 
 start_position = [1, 2]
 current_position = start_position.copy()
@@ -5,7 +7,7 @@ current_position = start_position.copy()
 
 world = [
     [0,0,0],
-    [0,1,0],
+    [1,1,0],
     [0,0,0]
 ]
 
@@ -79,10 +81,189 @@ def is_valid_position(world, x, y):
     return position_allowed
 
 
+def get_neighbors(world, position):
+    """
+    Check which of the four neighboring positions are accessible.
+
+    The neighboring positions are checked in the following order:
+    right (+x), left (-x), down (+y), up (-y).
+
+    Args:
+        world (list of list of int): Grid containing free cells (0)
+            and obstacles (1).
+        position (tuple or list of int): Current position (x, y).
+
+    Returns:
+        list of int: Four movement flags in the order
+            [+x, -x, +y, -y].
+            0 indicates an allowed movement.
+            1 indicates a blocked or out-of-bounds movement.
+    """
+
+    movement = [1, -1]
+    neighbors = [0,0,0,0]
+
+    for i in range(2):
+        if is_valid_position(world, position[0] + movement[i], position[1]) == True:
+            neighbors[i] = 0
+        else:
+            neighbors[i] = 1
+
+        if is_valid_position(world, position[0] ,position[1] + movement[i]) == True:
+            neighbors[i + 2] = 0
+        else:
+            neighbors[i + 2] = 1 
+    
+    return neighbors
 
 
+def best_moving_path_helper(decision, g, goal_x, goal_y, x, y):
+    """
+    Calculate the A* priority of a position and add it to the queue.
+
+    The priority is calculated using f(n) = g(n) + h(n),
+    where h(n) is the Manhattan distance to the goal.
+
+    Args:
+        decision (list): Priority queue containing (f, position)
+            entries.
+        g (int): Known movement cost from the start to the position.
+        goal_x (int): X-coordinate of the goal.
+        goal_y (int): Y-coordinate of the goal.
+        x (int): X-coordinate of the position.
+        y (int): Y-coordinate of the position.
+
+    Returns:
+        None: The function does not return a value.
+
+    Side Effects:
+        Adds a new entry to the decision priority queue.
+    """
+
+    h = abs(goal_x - x) + abs(goal_y - y)
+    f =  g + h
+    heapq.heappush(decision, (f, (x, y)))
 
 
+def process_neighbors(world, next_position, goal_position, came_from, g_score, decision):
+    """
+    Evaluate the valid neighboring positions of the current node.
+
+    For each valid neighbor, calculate the tentative movement cost.
+    If a shorter path to the neighbor is found, update its g-score
+    and predecessor, then add it to the priority queue.
+
+    Movement is restricted to four directions, with a cost of 1
+    per movement.
+
+    Args:
+        world (list of list of int): Grid containing free cells (0)
+            and obstacles (1).
+        next_position (tuple of int): Current position (x, y).
+        goal_position (tuple of int): Goal position (x, y).
+        came_from (dict): Maps each discovered position to its
+            predecessor position.
+        g_score (dict): Maps positions to their lowest known
+            movement cost from the start.
+        decision (list): Priority queue containing (f, position)
+            entries, managed using heapq.
+
+    Returns:
+        None: The function does not return a value.
+
+    Side Effects:
+        Updates came_from and g_score when a shorter path is found.
+        Adds updated neighbor positions to decision.
+    """
+
+    moving_field_range = 4
+    operation_list = [(1,0), (-1, 0), (0,1), (0,-1)]
+
+    next_x, next_y = next_position
+    goal_x, goal_y = goal_position
+    current_g = g_score[(next_x, next_y)]
+    new_g = current_g +1 
+    possible_movements = get_neighbors(world, (next_x,next_y))  
+
+    for i in range(moving_field_range):
+        if possible_movements[i] == 0:
+            a,b = operation_list[i]
+            neighbor = (next_x + a, next_y + b)
+            if new_g < g_score.get(neighbor, float("inf")):
+                came_from[neighbor] = (next_x, next_y)
+                g_score[neighbor] = new_g
+                best_moving_path_helper(decision, new_g, goal_x, goal_y,neighbor[0], neighbor[1])            
+                    
+
+def best_moving_path(goal_x,goal_y,current_x,current_y, world):
+    """
+     Find a shortest path through a grid using the A* algorithm.
+
+    Movement is restricted to four directions.
+    Each movement has a cost of 1.
+    Manhattan distance is used as the heuristic.
+    
+    Args:
+        goal_x (int): X-coordinate of the goal.
+        goal_y (int): Y-coordinate of the goal.
+        current_x (int): X-coordinate of the start.
+        current_y (int): Y-coordinate of the start.
+        world (list of list of int): Grid containing free cells (0)
+            and obstacles (1).
+
+    Returns:
+        list of tuple or None: Shortest path from start to goal,
+            including both endpoints, or None if no path exists.
+    """
+
+    if is_valid_position(world,goal_x,goal_y) == True and is_valid_position(world,current_x,current_y) == True:
+        
+        decision = []
+        g = 0
+        g_score = {
+            (current_x, current_y): 0
+        }
+        came_from = {
+            (current_x, current_y): None
+        }
+
+        best_moving_path_helper(decision,g, goal_x,goal_y, current_x, current_y )
+
+        while decision:
+            f, (current_x, current_y) = heapq.heappop(decision)
+            if current_x == goal_x and current_y == goal_y:
+                path = reconstruct_path(came_from, (goal_x, goal_y))
+                return path
+            process_neighbors(world,(current_x, current_y),(goal_x, goal_y), came_from, g_score, decision)
+    else:
+        return None
+ 
+
+def reconstruct_path(came_from, goal_position):
+    """
+    Reconstruct the path from the start to the goal.
+
+    Follow the stored predecessor positions backwards from the goal
+    until the start position is reached, then reverse the resulting
+    path to obtain the correct movement order.
+
+    Args:
+        came_from (dict): Maps each discovered position to its
+            predecessor. The start position maps to None.
+        goal_position (tuple of int): Goal position (x, y).
+
+    Returns:
+        list of tuple: Ordered path from start to goal,
+            including both endpoints.
+    """
+
+    path = []
+    position = goal_position
+    while position is not None:
+        path.append(position) 
+        position =  came_from[position]
+    path.reverse()
+    return path
 
 if __name__ == "__main__":
-    current_position = move_agent(world, current_position, [0, -1])
+    print(best_moving_path(2, 2, 0, 0, world))
