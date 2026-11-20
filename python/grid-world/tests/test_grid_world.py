@@ -73,12 +73,12 @@ def test_shortest_route():
     ]
     start_position = (0, 0)
     goal_position = (0, 2)
-    expectet_path = [(0, 0), (0, 1), (0, 2)]
+    expected_path = [(0, 0), (0, 1), (0, 2)]
     start_x, start_y = start_position
     goal_x, goal_y = goal_position
     result_best_moving_path = best_moving_path(goal_x, goal_y, start_x, start_y, test_world)
 
-    assert expectet_path == result_best_moving_path
+    assert expected_path == result_best_moving_path
 
 
 def test_shortest_route_more_options():
@@ -113,3 +113,47 @@ def test_shortest_route_more_options():
 
     for x1, y1 in result_best_moving_path:
         assert is_valid_position(test_world, x1, y1) == True
+
+def test_start_equals_goal():
+    test_world = [
+        [0,0,0],
+        [0,1,0],
+        [0,0,0]      
+    ]
+    assert best_moving_path(0, 0, 0, 0, test_world) == [(0, 0)]
+
+
+def test_blocked_start():
+    test_world = [
+        [0,0,0],
+        [0,1,0],
+        [0,0,0]      
+    ]
+    assert best_moving_path(0, 0, 1, 1, test_world) is None
+
+
+def test_start_out_of_world():
+    test_world = [
+        [0,0,0],
+        [0,1,0],
+        [0,0,0]      
+    ]
+    assert best_moving_path(0, 0, 10, 10, test_world) is None
+
+
+def test_blocked_goal():
+    test_world = [
+        [0,0,0],
+        [0,1,0],
+        [0,0,0]      
+    ]
+    assert best_moving_path(1, 1, 0, 0, test_world) is None
+
+
+def test_goal_out_of_world():
+    test_world = [
+        [0,0,0],
+        [0,1,0],
+        [0,0,0]      
+    ]
+    assert best_moving_path(10, 10, 0, 0, test_world) is None

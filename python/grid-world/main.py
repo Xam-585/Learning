@@ -6,9 +6,14 @@ current_position = start_position.copy()
 
 
 world = [
-    [0,0,0],
-    [1,1,0],
-    [0,0,0]
+    [0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0],
+    [0,0,1,0,0,0,0,0,0],
+    [0,0,0,0,0,1,0,0,0],
+    [0,0,0,0,0,0,0,0,0],
+    [0,0,1,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0]
 ]
 
 
@@ -125,7 +130,7 @@ def best_moving_path_helper(decision, g, goal_x, goal_y, x, y):
     where h(n) is the Manhattan distance to the goal.
 
     Args:
-        decision (list): Priority queue containing (f, position)
+        decision (list): Priority queue containing (f, -g, position) entries.
             entries.
         g (int): Known movement cost from the start to the position.
         goal_x (int): X-coordinate of the goal.
@@ -142,7 +147,8 @@ def best_moving_path_helper(decision, g, goal_x, goal_y, x, y):
 
     h = abs(goal_x - x) + abs(goal_y - y)
     f =  g + h
-    heapq.heappush(decision, (f, (x, y)))
+    minus_g = g *(-1)
+    heapq.heappush(decision, (f, minus_g,(x, y)))
 
 
 def process_neighbors(world, next_position, goal_position, came_from, g_score, decision):
@@ -215,9 +221,9 @@ def best_moving_path(goal_x,goal_y,current_x,current_y, world):
         list of tuple or None: Shortest path from start to goal,
             including both endpoints, or None if no path exists.
     """
-
+    expanded_nodes = 0
     if is_valid_position(world,goal_x,goal_y) == True and is_valid_position(world,current_x,current_y) == True:
-        
+
         decision = []
         g = 0
         g_score = {
@@ -228,16 +234,20 @@ def best_moving_path(goal_x,goal_y,current_x,current_y, world):
         }
 
         best_moving_path_helper(decision,g, goal_x,goal_y, current_x, current_y )
-
         while decision:
-            f, (current_x, current_y) = heapq.heappop(decision)
+            f, minus_g,(current_x, current_y) = heapq.heappop(decision)
+            h = abs(goal_x - current_x) + abs(goal_y - current_y)
+            if f> h + g_score[(current_x, current_y)]:
+                continue
             if current_x == goal_x and current_y == goal_y:
                 path = reconstruct_path(came_from, (goal_x, goal_y))
                 return path
+            expanded_nodes +=1
             process_neighbors(world,(current_x, current_y),(goal_x, goal_y), came_from, g_score, decision)
+            print(expanded_nodes)
     else:
         return None
- 
+
 
 def reconstruct_path(came_from, goal_position):
     """
@@ -266,4 +276,5 @@ def reconstruct_path(came_from, goal_position):
     return path
 
 if __name__ == "__main__":
-    print(best_moving_path(2, 2, 0, 0, world))
+    print(best_moving_path(7, 7, 0, 0, world))
+    

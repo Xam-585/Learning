@@ -7,3 +7,8 @@ __pycache__
 
 #Pytest_cache
 .pytest_cache/
+
+# C compiled files
+*.exe
+*.o
+*.obj
