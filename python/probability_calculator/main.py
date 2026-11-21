@@ -93,7 +93,7 @@ def action_loop(action, attempts, pocket):
 def statistical_analysis(action, attempts, pocket):
     """
     Simulate multiple attempts of an action and return statistical results as a dictionary.
-    
+
     Args:
         action (dict): action configuration containing:
             Probability_of_success,
@@ -130,7 +130,38 @@ def statistical_analysis(action, attempts, pocket):
     return statistic_dict
 
 
+def calculate_expected_value(action):
+    """
+    calculates the expected value from a action without simulating.
+
+    Args:
+        action (dict): action configuration containing:
+            Probability_of_success,
+            success_reward,
+            fail_reward,
+            cost_per_action
+
+    Returns:
+        float: the expected value 
+    """
+
+    p = action["Probability_of_success"] / 100
+    rs = action["success_reward"]
+    rf = action["fail_reward"]
+    c = action["cost_per_action"]
+
+    expected_value = p*rs +(1-p)*rf-c
+    return expected_value
+
+
 if __name__ == "__main__":
 
     pocket = 0
-    print(statistical_analysis(action_c, 10000, pocket))
+    expected = calculate_expected_value(action_c)
+    
+    print("Expected of action:\t",expected, sep=None, end="\n\n")
+    attempts_list = [10, 100, 1000, 10000]
+    for i in attempts_list:
+        simulated = statistical_analysis(action_c, i, pocket)["average value per action"]
+        print("Attempts: (",i,")\tSimulated value of action:", simulated, sep=None)
+        print(f"deviation:\t\t {abs(expected - simulated):.2f}", sep=None, end="\n\n")

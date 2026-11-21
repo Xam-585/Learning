@@ -7,8 +7,8 @@ if main_file not in sys.path:
     sys.path.append(main_file)
 
 
-from main import action_loop, statistical_analysis
-
+from main import action_loop, statistical_analysis, calculate_expected_value
+import pytest
 
 def test_action_loop():
 
@@ -91,3 +91,43 @@ def test_success_rate_statistical_experimental():
 
     test_c_dict = statistical_analysis(action_c,1000,10)
     assert test_c_dict["success rate"] <= 55 and test_c_dict["success rate"] >= 45
+
+
+def test_calculate_expected_value_fail():
+    action_a = {
+    "Probability_of_success" : 0,
+    "success_reward" : 10,
+    "fail_reward" : 0, 
+    "cost_per_action" : 5
+    }
+    assert pytest.approx(calculate_expected_value(action_a)) == -5.0
+
+
+def test_calculate_expected_value_succeed():
+    action_a = {
+    "Probability_of_success" : 100,
+    "success_reward" : 10,
+    "fail_reward" : 0, 
+    "cost_per_action" : 5
+    }
+    assert pytest.approx(calculate_expected_value(action_a)) == 5.0
+
+
+def test_calculate_expected_value_half_succeed():
+    action_a = {
+    "Probability_of_success" : 50,
+    "success_reward" : 10,
+    "fail_reward" : 0, 
+    "cost_per_action" : 5
+    }
+    assert pytest.approx(calculate_expected_value(action_a)) == 0.0
+
+
+def test_calculate_expected_value_fail_reward():
+    action_a = {
+    "Probability_of_success": 40,
+    "success_reward": 20,
+    "fail_reward": 5,
+    "cost_per_action": 3
+    }
+    assert pytest.approx(calculate_expected_value(action_a)) == 8
