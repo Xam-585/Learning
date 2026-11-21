@@ -48,14 +48,45 @@ def get_result(action, pocket):
     rand_number = random.randint(1,100)
     if rand_number <= action_probability_of_success:
         new_pocket += action_success_reward
-        print("success")
     else:
         new_pocket += action_fail_reward
-        print("fail")
     return new_pocket
 
 
-print(get_result.__doc__)
-pocket = 0
-pocket = get_result(action_a, pocket)
-print(pocket)
+def action_loop(action, attempts, pocket):
+    """
+    Simulate multiple attempts of an action and track the pocket value after each attempt.
+    Args:
+        action (dict): action configuration containing:
+            Probability_of_success,
+            success_reward,
+            fail_reward,
+            cost_per_action
+        attempts (int): number of runs
+        pocket (int): The current pocket value.
+
+    Returns:
+        tuple: Contains:
+            - int: Final pocket value.
+            - list: Changes in pocket for each attempt.
+            - list: Pocket values, including the initial value.
+    """
+    action_list = []
+    result_list = [pocket]
+    if attempts > 0:
+        for i in range(attempts):
+            new_pocket = get_result(action, pocket)
+            action_list.append(new_pocket - pocket)
+            result_list.append(new_pocket)
+            pocket = new_pocket
+
+    print("Results:", action_list)
+    print("Account_value:", result_list)
+    return pocket, action_list, result_list
+
+
+if __name__ == "__main__":
+
+    pocket = 0
+    pocket = action_loop(action_a,10, pocket)
+    print(pocket)
